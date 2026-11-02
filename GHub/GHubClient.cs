@@ -20,12 +20,14 @@ namespace OpenWigiDash.DeviceBatteryInfo.GHub;
 /// </remarks>
 public sealed class GHubClient : IBatterySource, IAsyncDisposable
 {
-    public static GHubClient Shared { get; } = new(TimeProvider.System, log: DiagnosticLog.Default);
-
     internal static readonly Uri DefaultEndpoint = new("ws://127.0.0.1:9010");
     internal static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan[] DefaultBackoff =
         [TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60)];
+
+    // Depois dos padrões acima: inicializadores estáticos rodam na ordem do arquivo, e antes disso eles eram nulos
+    // (era o "G HUB não está aberto" do primeiro teste no PC).
+    public static GHubClient Shared { get; } = new(TimeProvider.System, log: DiagnosticLog.Default);
 
     private readonly Uri _endpoint;
     private readonly TimeSpan[] _backoff;
@@ -61,6 +63,8 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
 
     /// <summary>Por que a última tentativa de conexão falhou (tipo e mensagem), para a tela de opções; <c>null</c> se conectou.</summary>
     public string? LastError { get; private set; }
+
+    internal Uri Endpoint => _endpoint;
 
     public void UseLogger(ILoggerFactory factory) => _logger = factory.CreateLogger("OpenWigiDash.DeviceBatteryInfo.GHub");
 

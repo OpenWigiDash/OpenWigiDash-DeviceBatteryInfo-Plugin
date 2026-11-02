@@ -65,6 +65,11 @@ public class GHubClientTests
     }
 
     [Fact]
+    public void Shared_UsesTheRealEndpoint() =>
+        // O Shared era criado antes dos padrões estáticos e ficava com endereço nulo.
+        Assert.Equal(new Uri("ws://127.0.0.1:9010"), GHubClient.Shared.Endpoint);
+
+    [Fact]
     public async Task NoGHub_IsUnavailable()
     {
         var port = FakeGHub.FreePort();
