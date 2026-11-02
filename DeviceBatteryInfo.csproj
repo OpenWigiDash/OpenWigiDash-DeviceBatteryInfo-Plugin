@@ -56,6 +56,8 @@
   <ItemGroup>
     <None Include="icon.png" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="\" Condition="Exists('icon.png')" />
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <!-- Logo "G" do G HUB (ícone do lghub.exe), desenhado no selo do tile. -->
+    <EmbeddedResource Include="Assets\ghub-logo.png" LogicalName="ghub-logo.png" />
   </ItemGroup>
 
   <ItemGroup>

@@ -31,8 +31,9 @@ internal static partial class GHubProtocol
 
     public static string BatteryState(string rawId) => $"/battery/{rawId}/state";
 
+    /// <summary>Pedido em JSON, montado à mão (sem serialização por reflexão, que o host pode ter desligado).</summary>
     public static string Request(string verb, string path, string msgId = "") =>
-        JsonSerializer.Serialize(new Dictionary<string, string> { ["msgId"] = msgId, ["verb"] = verb, ["path"] = path });
+        $"{{\"msgId\":\"{JsonEncodedText.Encode(msgId)}\",\"verb\":\"{JsonEncodedText.Encode(verb)}\",\"path\":\"{JsonEncodedText.Encode(path)}\"}}";
 
     [GeneratedRegex(@"^/battery/(?<id>[^/]+)/state$")]
     private static partial Regex BatteryStatePath();

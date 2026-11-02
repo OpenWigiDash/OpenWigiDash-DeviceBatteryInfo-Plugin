@@ -38,8 +38,12 @@ public sealed record BatteryVisual(string? Title, int? Percentage, bool Charging
     public SourceBadge? Badge { get; init; }
 }
 
-/// <summary>Selo pequeno com uma ou duas letras, no canto superior direito.</summary>
-public sealed record SourceBadge(string Text, Color Color);
+/// <summary>Selo da fonte no canto superior direito: uma imagem (logo) ou, sem ela, letras num quadrado colorido.</summary>
+public sealed record SourceBadge(string Text, Color Color)
+{
+    /// <summary>Logo redondo da fonte (ex.: o "G" do G HUB). Desenhado por inteiro, sem o quadrado.</summary>
+    public Bitmap? Image { get; init; }
+}
 
 /// <summary>
 /// Desenha o tile de bateria: título em cima, a pilha com 5 barras no meio e o percentual embaixo, como o "G Hub
@@ -94,7 +98,11 @@ public static class BatteryRenderer
             var middle = new RectangleF(0, titleBand, w, h - titleBand - bottomBand);
 
             if (hasTitle)
-                DrawText(g, theme, visual.Title!, new RectangleF(3, h * 0.03f, w - 6, titleBand), Color.White, bold: false);
+            {
+                // Com selo, o título encolhe dos dois lados para continuar centrado sem passar por baixo dele.
+                var inset = visual.Badge is null ? 3f : BadgeSide(size) + 4f;
+                DrawText(g, theme, visual.Title!, new RectangleF(inset, h * 0.03f, w - 2 * inset, titleBand), Color.White, bold: false);
+            }
 
             var accent = AccentFor(visual);
             var body = BatteryBody(middle);
@@ -231,11 +239,28 @@ public static class BatteryRenderer
         g.DrawString(text, font, brush, box, format);
     }
 
+    /// <summary>Lado do selo: 28% do lado menor do tile (no Small, ~40 px; no Mini, ~19 px).</summary>
+    internal static float BadgeSide(PixelSize size) => Math.Max(14f, Math.Min(size.Width, size.Height) * 0.28f);
+
     private static void DrawBadge(Graphics g, PixelSize size, SourceBadge badge)
     {
-        var side = Math.Max(12f, Math.Min(size.Width, size.Height) * 0.2f);
-        var margin = Math.Max(2f, side * 0.15f);
+        var side = BadgeSide(size);
+        var margin = Math.Max(2f, side * 0.08f);
         var rect = new RectangleF(size.Width - side - margin, margin, side, side);
+        if (badge.Image is { } image)
+        {
+            lock (image)
+            {
+                var previous = g.InterpolationMode;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.DrawImage(image, rect);
+                g.InterpolationMode = previous;
+            }
+            // Anel fino claro: o círculo preto do logo some no fundo escuro sem ele.
+            using var ring = new Pen(Color.FromArgb(150, 255, 255, 255), Math.Max(1f, side * 0.035f));
+            g.DrawEllipse(ring, RectangleF.Inflate(rect, -side * 0.02f, -side * 0.02f));
+            return;
+        }
         using (var path = Rounded(rect, side * 0.25f))
         using (var brush = new SolidBrush(badge.Color))
             g.FillPath(brush, path);

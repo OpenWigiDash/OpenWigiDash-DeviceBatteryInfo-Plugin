@@ -9,6 +9,7 @@
         @if (Instance.Source.State != SourceState.Connected && Instance.Source.LastError is { } error)
         {
             <MudText Typo="Typo.caption" Style="display:block;opacity:.8">Detalhe: @error</MudText>
+            <MudText Typo="Typo.caption" Style="display:block;opacity:.8">Log: %LOCALAPPDATA%\OpenWigiDash\WidgetData\DeviceBatteryInfo\ghub.log</MudText>
         }
     </MudAlert>
 
@@ -46,7 +47,7 @@
     </div>
 
     <MudCheckBox T="bool" Value="Instance.ShowBadge" ValueChanged="v => Instance.SetShowBadgeAsync(v)" Color="Color.Primary">
-        Selo do G HUB no canto
+        Logo do G HUB no canto
     </MudCheckBox>
 </MudStack>
 

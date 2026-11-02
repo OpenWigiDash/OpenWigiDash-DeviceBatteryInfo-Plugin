@@ -20,7 +20,7 @@ namespace OpenWigiDash.DeviceBatteryInfo.GHub;
 /// </remarks>
 public sealed class GHubClient : IBatterySource, IAsyncDisposable
 {
-    public static GHubClient Shared { get; } = new(TimeProvider.System);
+    public static GHubClient Shared { get; } = new(TimeProvider.System, log: DiagnosticLog.Default);
 
     internal static readonly Uri DefaultEndpoint = new("ws://127.0.0.1:9010");
     internal static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(60);
@@ -41,8 +41,11 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
     private SourceState _sourceState = SourceState.Connecting;
     private int _refreshQueued;
 
-    internal GHubClient(TimeProvider time, Uri? endpoint = null, TimeSpan[]? backoff = null)
+    private readonly DiagnosticLog _log;
+
+    internal GHubClient(TimeProvider time, Uri? endpoint = null, TimeSpan[]? backoff = null, DiagnosticLog? log = null)
     {
+        _log = log ?? new DiagnosticLog(null);
         _endpoint = endpoint ?? DefaultEndpoint;
         _backoff = backoff ?? DefaultBackoff;
         _time = time;
@@ -69,7 +72,9 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
             if (_users++ > 0)
                 return;
             _stop = new CancellationTokenSource();
-            _loop = Task.Run(() => RunAsync(_stop.Token));
+            var token = _stop.Token;
+            _log.Write("Primeiro widget: abrindo a conexão com o G HUB.");
+            _loop = Task.Run(() => GuardedRunAsync(token));
         }
     }
 
@@ -81,6 +86,7 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
         {
             if (_users == 0 || --_users > 0)
                 return;
+            _log.Write("Último widget saiu: fechando a conexão com o G HUB.");
             _stop?.Cancel();
             loop = _loop;
             _loop = null;
@@ -124,6 +130,35 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
         });
     }
 
+    /// <summary>O laço nunca pode morrer calado: se algo escapar, registra e recomeça.</summary>
+    private async Task GuardedRunAsync(CancellationToken stop)
+    {
+        while (!stop.IsCancellationRequested)
+        {
+            try
+            {
+                await RunAsync(stop).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (!stop.IsCancellationRequested)
+            {
+                LastError = Describe(ex);
+                _log.Write("Laço do G HUB caiu; recomeçando em 5 s.", ex);
+                _logger.LogError(ex, "Laço do G HUB caiu.");
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5), _time, stop).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+        _log.Write("Laço do G HUB encerrado.");
+    }
+
     private async Task RunAsync(CancellationToken stop)
     {
         var failures = 0;
@@ -143,6 +178,7 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
                 _socket = socket;
                 failures = 0;
                 LastError = null;
+                _log.Write($"Conectado ao G HUB em {_endpoint} (subprotocolo {socket.SubProtocol}).");
                 SetSourceState(SourceState.Connected);
                 _logger.LogInformation("Conectado ao G HUB em {Endpoint}.", _endpoint);
                 await SendAsync("SUBSCRIBE", GHubProtocol.DeviceStateChanged, stop).ConfigureAwait(false);
@@ -169,12 +205,14 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
             {
                 // G HUB fechado ou reiniciando. Só registra na primeira falha seguida, para não encher o log.
                 LastError = Describe(ex);
+                _log.Write($"G HUB indisponível (tentativa {failures + 1}): {LastError}");
                 if (failures == 0)
                     _logger.LogInformation("G HUB indisponível: {Message}", LastError);
             }
             catch (Exception ex)
             {
                 LastError = Describe(ex);
+                _log.Write("Erro na conexão com o G HUB.", ex);
                 _logger.LogWarning(ex, "Erro na conexão com o G HUB.");
             }
             finally
@@ -249,8 +287,15 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
     private async Task HandleAsync(string text, CancellationToken stop)
     {
         if (GHubProtocol.Parse(text) is not { } message)
+        {
+            _log.Write("Mensagem que não é JSON: " + Shorten(text));
             return;
+        }
+        if (message.Path != GHubProtocol.DevicesList)
+            _log.Write($"<- {message.Verb} {message.Path} {message.ResultCode} {(message.Payload is { } p ? Shorten(p.GetRawText()) : "")}");
         var update = _state.Apply(message);
+        if (message.Path == GHubProtocol.DevicesList)
+            _log.Write($"<- lista: {string.Join(", ", _state.Devices.Select(d => $"{d.Name} [{d.Key}] {(d.Connected ? "ligado" : "desligado")}"))}");
         if (update.Changed)
             RaiseChanged();
         foreach (var rawId in update.BatteryRequests)
@@ -274,6 +319,8 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
             _sendLock.Release();
         }
     }
+
+    private static string Shorten(string text) => text.Length <= 300 ? text : text[..300] + "…";
 
     private static string Describe(Exception ex)
     {
@@ -305,15 +352,22 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
         RaiseChanged();
     }
 
+    /// <summary>Avisa os widgets fora do laço: um handler lento (tela, opções) não pode travar a conexão.</summary>
     private void RaiseChanged()
     {
-        try
+        if (Changed is not { } handlers)
+            return;
+        ThreadPool.QueueUserWorkItem(_ =>
         {
-            Changed?.Invoke();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Erro ao avisar os widgets.");
-        }
+            try
+            {
+                handlers.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _log.Write("Erro ao avisar os widgets.", ex);
+                _logger.LogWarning(ex, "Erro ao avisar os widgets.");
+            }
+        });
     }
 }
