@@ -9,6 +9,7 @@ internal sealed class FakeSource : IBatterySource
     public string DisplayName => "Logitech G HUB";
     public string ShortName => "G HUB";
     public SourceState State { get; set; } = SourceState.Connected;
+    public string? LastError { get; set; }
     public IReadOnlyList<BatteryDevice> Devices { get; set; } = [];
     public event Action? Changed;
     public int Refreshes { get; private set; }

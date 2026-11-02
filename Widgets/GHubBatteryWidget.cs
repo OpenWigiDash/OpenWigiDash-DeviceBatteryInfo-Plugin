@@ -44,7 +44,7 @@ public sealed class GHubBatteryWidget : IWidget
 
     public ValueTask<WidgetFrame?> GetPreviewAsync(WidgetSize size, PixelSize pixelSize, CancellationToken cancellationToken) =>
         ValueTask.FromResult<WidgetFrame?>(BatteryRenderer.Render(pixelSize, _host?.Theme ?? new WidgetTheme(),
-            new BatteryVisual("Mouse", 75, false, BatteryTileState.Online) { Badge = Badge }));
+            new BatteryVisual(null, 75, false, BatteryTileState.Online) { Badge = Badge }));
 
     public ValueTask<IWidgetInstance> CreateInstanceAsync(IWidgetContext context, CancellationToken cancellationToken) =>
         BatteryInstance.CreateAsync(context, GHubClient.Shared, Badge, cancellationToken);

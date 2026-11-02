@@ -4,7 +4,13 @@
 
 @* Opções do tile de bateria: qual aparelho, texto de cima, cor de fundo e nível de alerta. *@
 <MudStack Spacing="4">
-    <MudAlert Severity="@SourceSeverity" Dense="true" Variant="Variant.Outlined">@SourceText</MudAlert>
+    <MudAlert Severity="@SourceSeverity" Dense="true" Variant="Variant.Outlined">
+        @SourceText
+        @if (Instance.Source.State != SourceState.Connected && Instance.Source.LastError is { } error)
+        {
+            <MudText Typo="Typo.caption" Style="display:block;opacity:.8">Detalhe: @error</MudText>
+        }
+    </MudAlert>
 
     <MudStack Row="true" AlignItems="AlignItems.Center">
         <MudSelect T="string" Value="@Instance.Binding?.Key" ValueChanged="ChooseDevice" Label="Aparelho"

@@ -56,6 +56,9 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
     public IReadOnlyList<BatteryDevice> Devices => _state.Devices;
     public event Action? Changed;
 
+    /// <summary>Por que a última tentativa de conexão falhou (tipo e mensagem), para a tela de opções; <c>null</c> se conectou.</summary>
+    public string? LastError { get; private set; }
+
     public void UseLogger(ILoggerFactory factory) => _logger = factory.CreateLogger("OpenWigiDash.DeviceBatteryInfo.GHub");
 
     /// <summary>Um widget passou a usar a conexão. A primeira abre.</summary>
@@ -139,6 +142,7 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
                 }
                 _socket = socket;
                 failures = 0;
+                LastError = null;
                 SetSourceState(SourceState.Connected);
                 _logger.LogInformation("Conectado ao G HUB em {Endpoint}.", _endpoint);
                 await SendAsync("SUBSCRIBE", GHubProtocol.DeviceStateChanged, stop).ConfigureAwait(false);
@@ -164,11 +168,13 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
             catch (Exception ex) when (ex is WebSocketException or OperationCanceledException or IOException)
             {
                 // G HUB fechado ou reiniciando. Só registra na primeira falha seguida, para não encher o log.
+                LastError = Describe(ex);
                 if (failures == 0)
-                    _logger.LogInformation("G HUB indisponível: {Message}", ex.Message);
+                    _logger.LogInformation("G HUB indisponível: {Message}", LastError);
             }
             catch (Exception ex)
             {
+                LastError = Describe(ex);
                 _logger.LogWarning(ex, "Erro na conexão com o G HUB.");
             }
             finally
@@ -267,6 +273,14 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
         {
             _sendLock.Release();
         }
+    }
+
+    private static string Describe(Exception ex)
+    {
+        var text = $"{ex.GetType().Name}: {ex.Message}";
+        if (ex.InnerException is { } inner)
+            text += $" ({inner.GetType().Name}: {inner.Message})";
+        return text;
     }
 
     private static async Task CloseQuietlyAsync(ClientWebSocket socket)

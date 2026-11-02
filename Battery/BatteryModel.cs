@@ -52,6 +52,9 @@ public interface IBatterySource
 
     SourceState State { get; }
 
+    /// <summary>Por que a fonte está indisponível (mensagem técnica), ou <c>null</c>.</summary>
+    string? LastError { get; }
+
     /// <summary>Aparelhos com bateria que a fonte já viu nesta sessão, ligados ou não.</summary>
     IReadOnlyList<BatteryDevice> Devices { get; }
 
