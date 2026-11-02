@@ -4,7 +4,7 @@ name: Release Widget (OpenWigiDash)
 # - o pacote de plugin no nuget.org (OpenWigiDash.DeviceBatteryInfo), que o Manager instala;
 # - o zip na release do GitHub, para quem instala à mão.
 # A versão do pacote é a da tag sem o "v". Publica por Trusted Publishing (sem chave guardada):
-# a política no nuget.org aponta para este repositório e este workflow, e vars.NUGET_USER é o usuário.
+# a política no nuget.org aponta para este repositório e este workflow, e o usuário é vars.NUGET_USER (sem ela, victorperez2911).
 #
 # Também roda à mão (Actions > Release Widget > Run workflow, na main) com a versão sem o "v": publica do
 # commit escolhido e a release cria a tag v<versão> nele. Assim a publicação não depende de alguém
@@ -74,7 +74,7 @@ jobs:
       uses: NuGet/login@v1
       id: nuget
       with:
-        user: ${{ vars.NUGET_USER }}
+        user: ${{ vars.NUGET_USER || 'victorperez2911' }}
 
     - name: Push to nuget.org
       shell: pwsh
