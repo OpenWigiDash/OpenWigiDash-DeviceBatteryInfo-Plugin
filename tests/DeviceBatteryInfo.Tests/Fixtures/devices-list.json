@@ -1,0 +1,44 @@
+{
+ "msgId": "1",
+ "verb": "GET",
+ "path": "/devices/list",
+ "origin": "backend",
+ "result": { "code": "SUCCESS", "what": "" },
+ "payload": {
+  "@type": "type.googleapis.com/logi.protocol.devices.Device.Info.List",
+  "deviceInfos": [
+   {
+    "id": "dev00000006", "pid": 16546, "isSubdevice": false, "parentId": "", "state": "ACTIVE",
+    "connectionType": "WIRELESS", "hasWirelessInterface": true, "displayConnectionType": "LIGHTSPEED",
+    "deviceType": "KEYBOARD", "deviceFamily": "", "deviceModel": "g715", "deviceBaseModel": "g715",
+    "displayName": "G715", "extendedDisplayName": "G715 Wireless Gaming Keyboard", "slotPrefix": "g715",
+    "deviceExt": 0, "deviceUnitId": "1111111111", "deviceSignature": "KEYBOARD.g715.0.1111111111", "givenName": "",
+    "capabilities": { "hasBatteryStatus": true, "unifiedBattery": true, "chargepadCompatible": false },
+    "activeInterfaces": [ { "type": "DEVIO", "id": "046d_40a2", "pid": 16546, "modelId": 0, "serialNumber": "1111111111",
+      "path": "usb\\vid_046d&pid_c547&mi_02\\7&2a00b924&0&0002:0", "deviceType": "KEYBOARD", "unitId": "1111111111" } ],
+    "path": "usb\\vid_046d&pid_c547&mi_02\\7&2a00b924&0&0002:0", "parentPath": ""
+   },
+   {
+    "id": "dev00000007", "pid": 16553, "isSubdevice": false, "parentId": "", "state": "ACTIVE",
+    "connectionType": "WIRELESS", "hasWirelessInterface": true, "displayConnectionType": "LIGHTSPEED",
+    "deviceType": "MOUSE", "deviceFamily": "", "deviceModel": "pro_x_2_wireless_mouse_ext1", "deviceBaseModel": "pro_x_2_wireless_mouse",
+    "displayName": "PRO X SUPERLIGHT 2", "extendedDisplayName": "PRO X SUPERLIGHT 2 Wireless Mouse", "slotPrefix": "prox2wirelessmouse",
+    "deviceExt": 1, "deviceUnitId": "2222222222", "deviceSignature": "MOUSE.pro_x_2_wireless_mouse.1.2222222222", "givenName": "",
+    "capabilities": { "hasBatteryStatus": true, "unifiedBattery": true, "chargepadCompatible": true },
+    "activeInterfaces": [ { "type": "DEVIO", "id": "046d_40a9", "pid": 16553, "modelId": 0, "serialNumber": "2222222222",
+      "path": "usb\\vid_046d&pid_c54d&mi_02\\8&918eba4&0&0002:0", "deviceType": "MOUSE", "unitId": "2222222222" } ],
+    "path": "usb\\vid_046d&pid_c54d&mi_02\\8&918eba4&0&0002:0", "parentPath": ""
+   },
+   {
+    "id": "dev00000008", "pid": 2194, "isSubdevice": false, "parentId": "", "state": "ACTIVE",
+    "connectionType": "USB", "hasWirelessInterface": false, "displayConnectionType": "USB",
+    "deviceType": "CAMERA", "deviceFamily": "", "deviceModel": "c920", "deviceBaseModel": "c920",
+    "displayName": "C920", "extendedDisplayName": "HD Pro Webcam C920", "slotPrefix": "c920",
+    "deviceExt": 0, "deviceUnitId": "3333AAAA", "deviceSignature": "CAMERA.c920.0.3333AAAA", "givenName": "",
+    "capabilities": { "hasBatteryStatus": false, "unifiedBattery": false },
+    "activeInterfaces": [ { "type": "UVC", "id": "046d_0892", "pid": 2194, "modelId": 0, "serialNumber": "3333AAAA" } ],
+    "path": "\\\\?\\usb#vid_046d&pid_0892&mi_00#8&d49408a&0&0000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global", "parentPath": ""
+   }
+  ]
+ }
+}

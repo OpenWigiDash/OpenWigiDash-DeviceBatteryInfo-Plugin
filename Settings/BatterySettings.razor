@@ -1,0 +1,82 @@
+@using OpenWigiDash.DeviceBatteryInfo.Rendering
+@inherits WidgetSettingsComponent<BatteryInstance>
+@implements IDisposable
+
+@* Opções do tile de bateria: qual aparelho, texto de cima, cor de fundo e nível de alerta. *@
+<MudStack Spacing="4">
+    <MudAlert Severity="@SourceSeverity" Dense="true" Variant="Variant.Outlined">@SourceText</MudAlert>
+
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudSelect T="string" Value="@Instance.Binding?.Key" ValueChanged="ChooseDevice" Label="Aparelho"
+                   Variant="Variant.Outlined" Style="min-width:320px"
+                   HelperText="Fica gravado pelo número de série: não troca de aparelho quando o G HUB reinicia ou o aparelho dorme.">
+            @foreach (var device in Instance.Source.Devices)
+            {
+                <MudSelectItem Value="@device.Key">@($"{device.Name} · {Status(device)}")</MudSelectItem>
+            }
+            @if (Instance.Binding is { } binding && Instance.Current is null)
+            {
+                <MudSelectItem Value="@binding.Key">@($"{binding.Name} · não encontrado agora")</MudSelectItem>
+            }
+        </MudSelect>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="Refresh">Atualizar</MudButton>
+    </MudStack>
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+        <MudCheckBox T="bool" Value="Instance.ShowTitle" ValueChanged="v => Instance.SetShowTitleAsync(v)" Color="Color.Primary">
+            Texto em cima
+        </MudCheckBox>
+        <MudTextField T="string" Value="@Instance.Title" ValueChanged="v => Instance.SetTitleAsync(v)" Label="Título"
+                      Variant="Variant.Outlined" Clearable="true" Disabled="@(!Instance.ShowTitle)"
+                      HelperText="Vazio = o nome do aparelho (ex.: Mouse, Teclado)." />
+    </MudStack>
+
+    <BackgroundColorField Value="@Instance.Background" ValueChanged="v => Instance.SetBackgroundAsync(v)" />
+
+    <div>
+        <MudText Typo="Typo.overline" Color="Color.Secondary">Pilha vermelha com @Instance.LowLevel% ou menos</MudText>
+        <MudSlider T="int" Value="Instance.LowLevel" ValueChanged="v => Instance.SetLowLevelAsync(v)" Min="0" Max="50" Step="5"
+                   Color="Color.Error" />
+    </div>
+
+    <MudCheckBox T="bool" Value="Instance.ShowBadge" ValueChanged="v => Instance.SetShowBadgeAsync(v)" Color="Color.Primary">
+        Selo do G HUB no canto
+    </MudCheckBox>
+</MudStack>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Instance.Changed += OnChanged;
+        Instance.Source.Refresh();
+    }
+
+    public void Dispose() => Instance.Changed -= OnChanged;
+
+    private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void Refresh() => Instance.Source.Refresh();
+
+    private Task ChooseDevice(string? key) =>
+        key == Instance.Binding?.Key ? Task.CompletedTask
+        : Instance.SetDeviceAsync(Instance.Source.Devices.FirstOrDefault(d => d.Key == key));
+
+    private static string Status(BatteryDevice device) =>
+        !device.Connected ? (device.Percentage is { } last ? $"dormindo ({last}%)" : "dormindo")
+        : device.Charging ? $"{device.Percentage}% carregando"
+        : $"{device.Percentage}%";
+
+    private Severity SourceSeverity => Instance.Source.State switch
+    {
+        SourceState.Connected => Severity.Success,
+        SourceState.Unavailable => Severity.Warning,
+        _ => Severity.Info,
+    };
+
+    private string SourceText => Instance.Source.State switch
+    {
+        SourceState.Connected => $"Conectado ao {Instance.Source.DisplayName}.",
+        SourceState.Unavailable => $"O {Instance.Source.DisplayName} não está aberto. O tile volta sozinho quando ele abrir.",
+        _ => $"Conectando ao {Instance.Source.DisplayName}…",
+    };
+}

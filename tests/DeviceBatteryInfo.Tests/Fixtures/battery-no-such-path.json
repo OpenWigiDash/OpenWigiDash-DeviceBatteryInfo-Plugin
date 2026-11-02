@@ -1,0 +1,7 @@
+{
+ "msgId": "b-dev00000008",
+ "verb": "GET",
+ "path": "/battery/dev00000008/state",
+ "origin": "backend",
+ "result": { "code": "NO_SUCH_PATH", "what": "message path '/battery/dev00000008/state' not found." }
+}

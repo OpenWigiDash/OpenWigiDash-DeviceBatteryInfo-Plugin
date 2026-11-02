@@ -1,0 +1,34 @@
+@using OpenWigiDash.DeviceBatteryInfo.Rendering
+
+@* Cor de fundo do tile: algumas sugestões, o seletor de cor do navegador e "Padrão" para voltar ao normal. *@
+<div>
+    <MudText Typo="Typo.overline" Color="Color.Secondary">Cor de fundo</MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+        <MudButton Size="Size.Small" Variant="@(Value is null ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+                   OnClick="() => Set(null)">Padrão</MudButton>
+        @foreach (var (name, hex) in TileColor.Presets)
+        {
+            var selected = string.Equals(Value, hex, StringComparison.OrdinalIgnoreCase);
+            <button type="button" title="@name" @onclick="() => Set(hex)"
+                    style="width:28px;height:28px;border-radius:6px;cursor:pointer;background:@hex;
+                           border:@(selected ? "3px solid var(--mud-palette-primary)" : "1px solid var(--mud-palette-lines-default)")"></button>
+        }
+        <label title="Outra cor" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;margin-left:4px">
+            <input type="color" value="@(Value ?? "#000000")" @onchange="e => Set(e.Value?.ToString())"
+                   style="width:34px;height:30px;padding:0;border:none;background:none;cursor:pointer" />
+            <MudText Typo="Typo.caption">@(Value ?? "Outra cor")</MudText>
+        </label>
+    </MudStack>
+    @if (!string.IsNullOrEmpty(HelperText))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@HelperText</MudText>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string? HelperText { get; set; }
+
+    private Task Set(string? hex) => ValueChanged.InvokeAsync(TileColor.Normalize(hex));
+}
