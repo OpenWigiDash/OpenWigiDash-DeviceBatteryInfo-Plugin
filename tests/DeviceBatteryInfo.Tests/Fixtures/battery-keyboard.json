@@ -1,0 +1,14 @@
+{
+ "msgId": "b-dev00000006",
+ "verb": "GET",
+ "path": "/battery/dev00000006/state",
+ "origin": "backend",
+ "result": { "code": "SUCCESS", "what": "" },
+ "payload": {
+  "@type": "type.googleapis.com/logi.protocol.wireless.Battery",
+  "deviceId": "dev00000006", "percentage": 55, "mileage": 13.1291656, "maxLifeSpan": 23.8712082, "charging": false,
+  "consumption": { "value": 60.74263, "details": { "system": 13.4827585, "sensor": 0, "mcu": 13.4827585, "lighting": 56.9223022 }, "useMw": true },
+  "batteryStateOfChargeSupport": "STATE_OF_CHARGE_SUPPORTED", "criticalLevel": false, "chargingError": false,
+  "componentType": "INVALID_TYPE", "fullyCharged": false, "isBatteryRemoved": false, "batteryMileageSupport": "MILEAGE_SUPPORTED"
+ }
+}
