@@ -66,6 +66,10 @@ public sealed class GHubClient : IBatterySource, IAsyncDisposable
 
     internal Uri Endpoint => _endpoint;
 
+    public string BindingHelp => "Fica gravado pelo número de série: não troca de aparelho quando o G HUB reinicia ou o aparelho dorme.";
+
+    public string? LogPath => _log.Path;
+
     public void UseLogger(ILoggerFactory factory) => _logger = factory.CreateLogger("OpenWigiDash.DeviceBatteryInfo.GHub");
 
     /// <summary>Um widget passou a usar a conexão. A primeira abre.</summary>

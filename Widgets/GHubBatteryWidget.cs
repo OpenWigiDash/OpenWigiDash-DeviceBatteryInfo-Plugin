@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Runtime.InteropServices;
 using OpenWigi.Sdk;
 using OpenWigiDash.DeviceBatteryInfo.GHub;
 using OpenWigiDash.DeviceBatteryInfo.Rendering;
@@ -11,7 +10,7 @@ namespace OpenWigiDash.DeviceBatteryInfo.Widgets;
 
 /// <summary>
 /// Bateria de um aparelho Logitech (mouse, teclado, headset) lida do G HUB. Substitui o "G Hub Device" do Stream Deck.
-/// Cada fonte de bateria tem o seu widget (G HUB agora; Bluetooth e Xbox depois), com o mesmo desenho de tile.
+/// Cada fonte de bateria tem o seu widget (G HUB, Bluetooth; Xbox depois), com o mesmo desenho de tile.
 /// </summary>
 public sealed class GHubBatteryWidget : IWidget
 {
@@ -21,23 +20,7 @@ public sealed class GHubBatteryWidget : IWidget
     public const string Website = "https://github.com/OpenWigiDash/OpenWigiDash-DeviceBatteryInfo-Plugin";
 
     /// <summary>Selo do G HUB no canto do tile: o "G" da Logitech G (ícone do próprio G HUB).</summary>
-    internal static readonly SourceBadge Badge = new("G", Color.FromArgb(0x00, 0xB8, 0xFC)) { Image = LoadLogo() };
-
-    private static Bitmap? LoadLogo()
-    {
-        try
-        {
-            using var stream = typeof(GHubBatteryWidget).Assembly.GetManifestResourceStream("ghub-logo.png");
-            if (stream is null)
-                return null;
-            using var loaded = new Bitmap(stream);
-            return new Bitmap(loaded);
-        }
-        catch (Exception ex) when (ex is ArgumentException or PlatformNotSupportedException or TypeInitializationException or ExternalException)
-        {
-            return null; // sem GDI+ (testes fora do Windows): fica a letra
-        }
-    }
+    internal static readonly SourceBadge Badge = new("G", Color.FromArgb(0x00, 0xB8, 0xFC)) { Image = Logo.Load("ghub-logo.png") };
 
     private IWidgetHost? _host;
 

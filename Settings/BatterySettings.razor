@@ -9,14 +9,17 @@
         @if (Instance.Source.State != SourceState.Connected && Instance.Source.LastError is { } error)
         {
             <MudText Typo="Typo.caption" Style="display:block;opacity:.8">Detalhe: @error</MudText>
-            <MudText Typo="Typo.caption" Style="display:block;opacity:.8">Log: %LOCALAPPDATA%\OpenWigiDash\WidgetData\DeviceBatteryInfo\ghub.log</MudText>
+            @if (Instance.Source.LogPath is { } log)
+            {
+                <MudText Typo="Typo.caption" Style="display:block;opacity:.8">Log: @log</MudText>
+            }
         }
     </MudAlert>
 
     <MudStack Row="true" AlignItems="AlignItems.Center">
-        <MudSelect T="string" Value="@Instance.Binding?.Key" ValueChanged="ChooseDevice" Label="Aparelho"
+        <MudSelect T="string" Value="@Instance.Binding?.Key" ValueChanged="ChooseDevice" Label="Aparelho" ToStringFunc="DeviceLabel"
                    Variant="Variant.Outlined" Style="min-width:320px"
-                   HelperText="Fica gravado pelo número de série: não troca de aparelho quando o G HUB reinicia ou o aparelho dorme.">
+                   HelperText="@Instance.Source.BindingHelp">
             @foreach (var device in Instance.Source.Devices)
             {
                 <MudSelectItem Value="@device.Key">@($"{device.Name} · {Status(device)}")</MudSelectItem>
@@ -47,7 +50,7 @@
     </div>
 
     <MudCheckBox T="bool" Value="Instance.ShowBadge" ValueChanged="v => Instance.SetShowBadgeAsync(v)" Color="Color.Primary">
-        Logo do G HUB no canto
+        Logo do @Instance.Source.ShortName no canto
     </MudCheckBox>
 </MudStack>
 
@@ -68,6 +71,16 @@
         key == Instance.Binding?.Key ? Task.CompletedTask
         : Instance.SetDeviceAsync(Instance.Source.Devices.FirstOrDefault(d => d.Key == key));
 
+    // O campo fechado mostra o mesmo texto da lista, não a chave gravada (bt:..., ghub:...).
+    private string DeviceLabel(string? key)
+    {
+        if (string.IsNullOrEmpty(key))
+            return "";
+        if (Instance.Source.Devices.FirstOrDefault(d => d.Key == key) is { } device)
+            return $"{device.Name} · {Status(device)}";
+        return Instance.Binding is { } binding && binding.Key == key ? $"{binding.Name} · não encontrado agora" : key;
+    }
+
     private static string Status(BatteryDevice device) =>
         !device.Connected ? (device.Percentage is { } last ? $"dormindo ({last}%)" : "dormindo")
         : device.Charging ? $"{device.Percentage}% carregando"
@@ -83,7 +96,7 @@
     private string SourceText => Instance.Source.State switch
     {
         SourceState.Connected => $"Conectado ao {Instance.Source.DisplayName}.",
-        SourceState.Unavailable => $"O {Instance.Source.DisplayName} não está aberto. O tile volta sozinho quando ele abrir.",
+        SourceState.Unavailable => Instance.Source.UnavailableMessage,
         _ => $"Conectando ao {Instance.Source.DisplayName}…",
     };
 }

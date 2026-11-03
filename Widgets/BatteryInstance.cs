@@ -138,7 +138,7 @@ public sealed class BatteryInstance : IWidgetInstance
             visual = new BatteryVisual(title, null, false, BatteryTileState.NotConfigured, compact ? "--" : "Escolha o aparelho");
         else if (_source.State == SourceState.Unavailable)
             visual = new BatteryVisual(title, device?.Percentage, false, BatteryTileState.SourceOffline,
-                compact ? "Fechado" : $"{_source.ShortName} fechado");
+                compact ? _source.OfflineShortText : _source.OfflineText);
         else if (device is null)
             visual = new BatteryVisual(title, null, false,
                 _source.State == SourceState.Connecting ? BatteryTileState.Asleep : BatteryTileState.NotFound,
