@@ -130,8 +130,8 @@ public static class BatteryRenderer
                 if (visual.State == BatteryTileState.Asleep)
                 {
                     var rect = BadgeRect(size);
-                    DrawMark(g, "Zz", new RectangleF(rect.X - rect.Width * 0.1f, rect.Bottom + rect.Height * 0.04f,
-                        rect.Width * 1.2f, rect.Height * 0.62f), DimText);
+                    DrawMark(g, "Zz", new RectangleF(rect.X, rect.Bottom + rect.Height * 0.04f,
+                        rect.Width, rect.Height * 0.55f), DimText);
                 }
             }
         }
