@@ -9,9 +9,9 @@ mouse, teclado e headset sem fio num tile, como o "G Hub Device" do Stream Deck,
 | Widget | O que faz |
 | --- | --- |
 | G HUB Battery | Bateria de um aparelho Logitech (mouse, teclado, headset) lida do G HUB |
+| Bluetooth Battery | Bateria de um aparelho Bluetooth pareado (fone, mouse, teclado, celular), a que o Windows mostra em Configurações > Bluetooth |
 
-Cada fonte de bateria tem o seu widget, com o mesmo desenho de tile. Próximos: Bluetooth (o percentual que o
-Windows mostra em Configurações > Bluetooth) e controle Xbox. Ver [docs/PLANO.md](docs/PLANO.md).
+Cada fonte de bateria tem o seu widget, com o mesmo desenho de tile. Próximo: controle Xbox no adaptador ou no cabo. Ver [docs/PLANO.md](docs/PLANO.md).
 
 Tamanhos: Mini (meia célula) e Small (o 1x1 da grade antiga).
 
@@ -37,6 +37,18 @@ plugin lê o mesmo serviço local que o próprio G HUB usa (`ws://127.0.0.1:9010
 | Fica "desconectado" depois que o aparelho volta do standby | Só atualizava com evento de mudança de bateria; não perguntava de novo | Pergunta a cada minuto, quando a tela acorda, ao tocar no tile e quando o G HUB avisa que o aparelho ligou |
 | Widget troca de aparelho sozinho, ou todos mostram o teclado | Gravava o id de sessão do G HUB (`dev00000006`), que muda quando o G HUB reinicia ou o aparelho reconecta; widget sem aparelho caía no primeiro da lista | Grava o `deviceSignature` (tipo, modelo e número de série); sem aparelho gravado, pede para escolher; aparelho sumido vira "não encontrado", nunca outro |
 | Tenta reconectar a cada 5 s para sempre, com o G HUB fechado | Socket antigo ficava aberto sem dono | Fecha o socket antes de abrir outro e espaça as tentativas até 1 min |
+
+## Bluetooth Battery
+
+Mesmo tile do G HUB Battery, com o selo do Bluetooth no canto. Lê a propriedade de bateria que o Windows guarda para
+cada aparelho pareado (`DEVPKEY_Bluetooth_Battery`), a mesma de Configurações > Bluetooth, sem falar com o aparelho.
+
+- O aparelho fica gravado pelo endereço Bluetooth, que não muda quando ele desliga ou o PC reinicia.
+- Um celular aparece quando está conectado ao PC (por exemplo, pelo Vincular ao Celular, que mantém o viva-voz aberto).
+- O Windows guarda a última leitura de um aparelho desligado: o tile mostra essa leitura em cinza, com "Zz".
+- O Windows não diz se o aparelho está carregando, então o tile não mostra o raio.
+- A lista é lida de novo a cada 30 s, quando a tela acorda e ao tocar no tile. Log em
+  `%LOCALAPPDATA%\OpenWigiDash\WidgetData\DeviceBatteryInfo\bluetooth.log`.
 
 ## Requisitos
 

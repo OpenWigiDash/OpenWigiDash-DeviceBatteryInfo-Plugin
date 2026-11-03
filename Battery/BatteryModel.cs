@@ -38,7 +38,7 @@ public sealed record BatteryDevice(
     bool Connected,
     DateTimeOffset? UpdatedAt);
 
-/// <summary>De onde vem a bateria (G HUB hoje; Bluetooth e Xbox depois).</summary>
+/// <summary>De onde vem a bateria (G HUB, Bluetooth; Xbox depois).</summary>
 public interface IBatterySource
 {
     /// <summary>Id curto gravado junto com a chave do aparelho (ex.: "ghub").</summary>
@@ -69,6 +69,21 @@ public interface IBatterySource
 
     /// <summary>Um widget saiu. O último fecha a conexão.</summary>
     Task ReleaseAsync();
+
+    /// <summary>Texto de baixo do tile quando a fonte está indisponível (sem compactar).</summary>
+    string OfflineText => $"{ShortName} fechado";
+
+    /// <summary>O mesmo, curto, para o tile Mini.</summary>
+    string OfflineShortText => "Fechado";
+
+    /// <summary>Aviso das opções quando a fonte está indisponível.</summary>
+    string UnavailableMessage => $"O {DisplayName} não está aberto. O tile volta sozinho quando ele abrir.";
+
+    /// <summary>Explica nas opções por que o vínculo não troca de aparelho.</summary>
+    string BindingHelp => "Fica gravado por um número fixo do aparelho: não troca de aparelho sozinho.";
+
+    /// <summary>Arquivo de log da fonte, para mostrar nas opções; <c>null</c> = sem log.</summary>
+    string? LogPath => null;
 }
 
 /// <summary>O aparelho que um widget mostra, como fica gravado nas configurações.</summary>
