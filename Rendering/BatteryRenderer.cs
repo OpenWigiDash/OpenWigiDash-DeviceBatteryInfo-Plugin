@@ -108,9 +108,12 @@ public static class BatteryRenderer
 
             if (hasTitle)
             {
-                // Com selo, o título encolhe dos dois lados para continuar centrado sem passar por baixo dele.
-                var inset = visual.Badge is null ? 3f : BadgeSide(size) + 4f;
-                DrawText(g, theme, visual.Title!, new RectangleF(inset, h * 0.03f, w - 2 * inset, titleBand), Color.White, bold: false);
+                // Com selo, o título vai para a esquerda e acaba antes do selo, para não passar por baixo dele.
+                var box = visual.Badge is null
+                    ? new RectangleF(3f, h * 0.03f, w - 6f, titleBand)
+                    : new RectangleF(5f, h * 0.03f, BadgeRect(size).X - 8f, titleBand);
+                DrawText(g, theme, visual.Title!, box, Color.White, bold: false,
+                    visual.Badge is null ? StringAlignment.Center : StringAlignment.Near);
             }
 
             var accent = AccentFor(visual);
@@ -124,15 +127,13 @@ public static class BatteryRenderer
                 bottomColor, bold: !small);
 
             if (visual.Badge is { } badge)
-            {
                 DrawBadge(g, size, badge);
-                // Com selo, o "Zz" fica logo abaixo dele, no canto, longe do título e do selo.
-                if (visual.State == BatteryTileState.Asleep)
-                {
-                    var rect = BadgeRect(size);
-                    DrawMark(g, "Zz", new RectangleF(rect.X, rect.Bottom + rect.Height * 0.04f,
-                        rect.Width, rect.Height * 0.55f), DimText);
-                }
+
+            // "Zz" de dormindo no canto de baixo à esquerda, ao lado do percentual, longe do título e do selo.
+            if (visual.State == BatteryTileState.Asleep)
+            {
+                var zh = bottomBand * 0.85f;
+                DrawMark(g, "Zz", new RectangleF(4f, h - bottomBand + (bottomBand - zh) / 2f - h * 0.02f, zh * 1.5f, zh), DimText);
             }
         }
         return ToFrame(bitmap);
@@ -184,10 +185,6 @@ public static class BatteryRenderer
             case BatteryTileState.Online when visual.Charging:
                 DrawBolt(g, body);
                 break;
-            case BatteryTileState.Asleep when visual.Badge is null:
-                DrawMark(g, "Zz", new RectangleF(body.Right - body.Height * 0.55f, body.Y - body.Height * 0.62f,
-                    body.Height * 0.9f, body.Height * 0.62f), DimText);
-                break;
             case BatteryTileState.NotFound:
             case BatteryTileState.NotConfigured:
                 DrawMark(g, "?", body, Color.White);
@@ -234,12 +231,13 @@ public static class BatteryRenderer
         g.FillPath(fill, path);
     }
 
-    private static void DrawText(Graphics g, WidgetTheme theme, string text, RectangleF box, Color color, bool bold)
+    private static void DrawText(Graphics g, WidgetTheme theme, string text, RectangleF box, Color color, bool bold,
+        StringAlignment alignment = StringAlignment.Center)
     {
         using var family = ResolveFamily(bold ? theme.SecondaryFontFamily : theme.PrimaryFontFamily);
         using var format = new StringFormat
         {
-            Alignment = StringAlignment.Center,
+            Alignment = alignment,
             LineAlignment = StringAlignment.Center,
             Trimming = StringTrimming.EllipsisCharacter,
             FormatFlags = StringFormatFlags.NoWrap,
