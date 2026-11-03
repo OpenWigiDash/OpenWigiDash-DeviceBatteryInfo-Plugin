@@ -20,8 +20,8 @@ Tamanhos: Mini (meia célula) e Small (o 1x1 da grade antiga).
 
 O tile mostra o nome do aparelho em cima, a pilha com 5 barras e o percentual embaixo.
 
-- **Dourado**: normal. **Vermelho**: no nível de alerta ou abaixo (20% por padrão). **Verde com raio**: carregando.
-- **Cinza com "Zz"**: o aparelho está dormindo ou fora de alcance. O percentual é a última leitura.
+- **Verde**: 85% ou mais. **Dourado**: no meio. **Vermelho**: no nível de alerta ou abaixo (20% por padrão). **Verde com raio**: carregando.
+- **Cinza com "Zz"** (abaixo do selo): o aparelho está dormindo ou fora de alcance. O percentual é a última leitura.
 - **"?" Não encontrado**: o aparelho escolhido não está no G HUB agora.
 - **"!" G HUB fechado**: o G HUB não está aberto. O tile volta sozinho quando ele abrir.
 - Toque no tile pede as leituras de novo na hora.

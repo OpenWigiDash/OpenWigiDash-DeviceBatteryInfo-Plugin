@@ -22,6 +22,9 @@ public class BatteryRendererTests
     {
         Assert.Equal(BatteryRenderer.NormalColor, BatteryRenderer.AccentFor(new(null, 54, false, BatteryTileState.Online)));
         Assert.Equal(BatteryRenderer.LowColor, BatteryRenderer.AccentFor(new(null, 20, false, BatteryTileState.Online)));
+        Assert.Equal(BatteryRenderer.NormalColor, BatteryRenderer.AccentFor(new(null, 84, false, BatteryTileState.Online)));
+        Assert.Equal(BatteryRenderer.HighColor, BatteryRenderer.AccentFor(new(null, 85, false, BatteryTileState.Online)));
+        Assert.Equal(BatteryRenderer.HighColor, BatteryRenderer.AccentFor(new(null, 98, false, BatteryTileState.Online)));
         Assert.Equal(BatteryRenderer.ChargingColor, BatteryRenderer.AccentFor(new(null, 10, true, BatteryTileState.Online)));
         Assert.Equal(BatteryRenderer.DimColor, BatteryRenderer.AccentFor(new(null, 54, false, BatteryTileState.Asleep)));
     }

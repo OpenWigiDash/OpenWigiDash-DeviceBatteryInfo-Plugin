@@ -25,12 +25,12 @@ public class RenderPreviewTests
         };
         foreach (var (name, badge) in badges)
         foreach (var size in new[] { WidgetSize.Mini, WidgetSize.Small })
-        foreach (var state in new[] { BatteryTileState.Online, BatteryTileState.Asleep })
+        foreach (var (state, percent) in new[] { (BatteryTileState.Online, 98), (BatteryTileState.Online, 40), (BatteryTileState.Asleep, 40) })
         {
             var pixels = TileFrame.Default.ContentSize(size.CellSpan);
             var frame = BatteryRenderer.Render(pixels, new WidgetTheme(),
-                new BatteryVisual("Galaxy A55 5G", 40, false, state) { Badge = badge });
-            Save(frame, Path.Combine(output, $"{name}-{size}-{state}.png".ToLowerInvariant()));
+                new BatteryVisual("Galaxy A55 5G", percent, false, state) { Badge = badge });
+            Save(frame, Path.Combine(output, $"{name}-{size}-{state}-{percent}.png".ToLowerInvariant()));
         }
     }
 

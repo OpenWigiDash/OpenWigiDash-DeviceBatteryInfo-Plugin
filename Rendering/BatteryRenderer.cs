@@ -47,7 +47,8 @@ public sealed record SourceBadge(string Text, Color Color)
 
 /// <summary>
 /// Desenha o tile de bateria: título em cima, a pilha com 5 barras no meio e o percentual embaixo, como o "G Hub
-/// Device" do Stream Deck. A cor diz o estado: dourado normal, vermelho com pouca bateria, verde carregando e cinza
+/// Device" do Stream Deck. A cor diz o estado: verde quase cheia (85% ou mais) ou carregando, dourado no meio,
+/// vermelho com pouca bateria e cinza
 /// quando o aparelho não está respondendo.
 /// </summary>
 public static class BatteryRenderer
@@ -56,6 +57,9 @@ public static class BatteryRenderer
     public static readonly Color NormalColor = Color.FromArgb(0xE8, 0xB9, 0x23);
     public static readonly Color LowColor = Color.FromArgb(0xE5, 0x48, 0x4D);
     public static readonly Color ChargingColor = Color.FromArgb(0x3B, 0xC4, 0x6B);
+    /// <summary>Daqui para cima (inclusive) a pilha fica verde: quase cheia.</summary>
+    public const int HighLevel = 85;
+    public static readonly Color HighColor = Color.FromArgb(0x3B, 0xC4, 0x6B);
     public static readonly Color DimColor = Color.FromArgb(0x6E, 0x72, 0x80);
     private static readonly Color DimText = Color.FromArgb(0x9A, 0x9E, 0xAA);
 
@@ -73,7 +77,12 @@ public static class BatteryRenderer
             return DimColor;
         if (visual.Charging)
             return ChargingColor;
-        return visual.Percentage is { } p && p <= visual.LowLevel ? LowColor : NormalColor;
+        return visual.Percentage switch
+        {
+            { } p when p <= visual.LowLevel => LowColor,
+            { } p when p >= HighLevel => HighColor,
+            _ => NormalColor,
+        };
     }
 
     /// <summary>Texto de baixo: o detalhe, ou o percentual ("54%"), ou "--%".</summary>
