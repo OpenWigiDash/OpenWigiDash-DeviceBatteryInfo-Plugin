@@ -17,7 +17,7 @@
     </MudAlert>
 
     <MudStack Row="true" AlignItems="AlignItems.Center">
-        <MudSelect T="string" Value="@Instance.Binding?.Key" ValueChanged="ChooseDevice" Label="Aparelho"
+        <MudSelect T="string" Value="@Instance.Binding?.Key" ValueChanged="ChooseDevice" Label="Aparelho" ToStringFunc="DeviceLabel"
                    Variant="Variant.Outlined" Style="min-width:320px"
                    HelperText="@Instance.Source.BindingHelp">
             @foreach (var device in Instance.Source.Devices)
@@ -70,6 +70,16 @@
     private Task ChooseDevice(string? key) =>
         key == Instance.Binding?.Key ? Task.CompletedTask
         : Instance.SetDeviceAsync(Instance.Source.Devices.FirstOrDefault(d => d.Key == key));
+
+    // O campo fechado mostra o mesmo texto da lista, não a chave gravada (bt:..., ghub:...).
+    private string DeviceLabel(string? key)
+    {
+        if (string.IsNullOrEmpty(key))
+            return "";
+        if (Instance.Source.Devices.FirstOrDefault(d => d.Key == key) is { } device)
+            return $"{device.Name} · {Status(device)}";
+        return Instance.Binding is { } binding && binding.Key == key ? $"{binding.Name} · não encontrado agora" : key;
+    }
 
     private static string Status(BatteryDevice device) =>
         !device.Connected ? (device.Percentage is { } last ? $"dormindo ({last}%)" : "dormindo")
