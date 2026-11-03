@@ -12,7 +12,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Authors>Victor Perez</Authors>
     <Product>Device Battery Info</Product>
-    <Description>Bateria dos dispositivos do PC no WigiDash (OpenWigiDashManager): mouse, teclado e headset Logitech pelo G HUB e aparelhos Bluetooth pelo Windows, sem trocar de aparelho sozinho e sem ficar preso em "desconectado".</Description>
+    <Description>Bateria dos dispositivos do PC no WigiDash (OpenWigiDashManager): mouse, teclado e headset Logitech pelo G HUB aparelhos Bluetooth e controles Xbox pelo Windows, sem trocar de aparelho sozinho e sem ficar preso em "desconectado".</Description>
   </PropertyGroup>
 
   <!-- `dotnet pack` gera o pacote de plugin para o nuget.org (docs/sdk.md do OpenWigiDashManager,
@@ -21,8 +21,8 @@
     <OpenWigiDashPlugin>true</OpenWigiDashPlugin>
     <PackageId>OpenWigiDash.DeviceBatteryInfo</PackageId>
     <Title>Device Battery Info</Title>
-    <Version>1.1.0-preview.1</Version>
-    <PackageTags>battery;logitech;ghub;bluetooth;mouse;keyboard;headset</PackageTags>
+    <Version>1.2.0-preview.1</Version>
+    <PackageTags>battery;logitech;ghub;bluetooth;xbox;mouse;keyboard;headset</PackageTags>
     <PackageProjectUrl>https://github.com/OpenWigiDash/OpenWigiDash-DeviceBatteryInfo-Plugin</PackageProjectUrl>
     <RepositoryUrl>https://github.com/OpenWigiDash/OpenWigiDash-DeviceBatteryInfo-Plugin</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -60,6 +60,8 @@
     <EmbeddedResource Include="Assets\ghub-logo.png" LogicalName="ghub-logo.png" />
     <!-- Runa do Bluetooth num círculo azul, desenhada para o plugin. -->
     <EmbeddedResource Include="Assets\bluetooth-logo.png" LogicalName="bluetooth-logo.png" />
+    <!-- Controle genérico num círculo verde, desenhado para o plugin. -->
+    <EmbeddedResource Include="Assets\gamepad-logo.png" LogicalName="gamepad-logo.png" />
   </ItemGroup>
 
   <ItemGroup>
