@@ -47,7 +47,8 @@ public sealed record SourceBadge(string Text, Color Color)
 
 /// <summary>
 /// Desenha o tile de bateria: título em cima, a pilha com 5 barras no meio e o percentual embaixo, como o "G Hub
-/// Device" do Stream Deck. A cor diz o estado: dourado normal, vermelho com pouca bateria, verde carregando e cinza
+/// Device" do Stream Deck. A cor diz o nível: verde quase cheia (85% ou mais), dourado no meio,
+/// vermelho com pouca bateria e cinza
 /// quando o aparelho não está respondendo.
 /// </summary>
 public static class BatteryRenderer
@@ -55,7 +56,9 @@ public static class BatteryRenderer
     public static readonly Color DefaultBackground = Color.FromArgb(0x14, 0x17, 0x2B);
     public static readonly Color NormalColor = Color.FromArgb(0xE8, 0xB9, 0x23);
     public static readonly Color LowColor = Color.FromArgb(0xE5, 0x48, 0x4D);
-    public static readonly Color ChargingColor = Color.FromArgb(0x3B, 0xC4, 0x6B);
+    /// <summary>Daqui para cima (inclusive) a pilha fica verde: quase cheia.</summary>
+    public const int HighLevel = 85;
+    public static readonly Color HighColor = Color.FromArgb(0x3B, 0xC4, 0x6B);
     public static readonly Color DimColor = Color.FromArgb(0x6E, 0x72, 0x80);
     private static readonly Color DimText = Color.FromArgb(0x9A, 0x9E, 0xAA);
 
@@ -71,9 +74,13 @@ public static class BatteryRenderer
     {
         if (visual.State != BatteryTileState.Online)
             return DimColor;
-        if (visual.Charging)
-            return ChargingColor;
-        return visual.Percentage is { } p && p <= visual.LowLevel ? LowColor : NormalColor;
+        // Carregando não muda a cor: o raio já diz isso, e a cor continua dizendo o nível.
+        return visual.Percentage switch
+        {
+            { } p when p <= visual.LowLevel => LowColor,
+            { } p when p >= HighLevel => HighColor,
+            _ => NormalColor,
+        };
     }
 
     /// <summary>Texto de baixo: o detalhe, ou o percentual ("54%"), ou "--%".</summary>
@@ -99,9 +106,14 @@ public static class BatteryRenderer
 
             if (hasTitle)
             {
-                // Com selo, o título encolhe dos dois lados para continuar centrado sem passar por baixo dele.
-                var inset = visual.Badge is null ? 3f : BadgeSide(size) + 4f;
-                DrawText(g, theme, visual.Title!, new RectangleF(inset, h * 0.03f, w - 2 * inset, titleBand), Color.White, bold: false);
+                // Com selo, o título vai para a esquerda e acaba antes do selo, para não passar por baixo dele.
+                var box = visual.Badge is null
+                    ? new RectangleF(3f, h * 0.03f, w - 6f, titleBand)
+                    : new RectangleF(5f, h * 0.03f, BadgeRect(size).X - 8f, titleBand);
+                DrawText(g, theme, visual.Title!, box, Color.White, bold: false,
+                    visual.Badge is null ? StringAlignment.Center : StringAlignment.Near,
+                    // Título com o mesmo tamanho em todos os tiles: nome comprido corta com "…" em vez de ficar miúdo.
+                    minScale: 0.9f);
             }
 
             var accent = AccentFor(visual);
@@ -116,6 +128,13 @@ public static class BatteryRenderer
 
             if (visual.Badge is { } badge)
                 DrawBadge(g, size, badge);
+
+            // "Zz" de dormindo no canto de baixo à esquerda, ao lado do percentual, longe do título e do selo.
+            if (visual.State == BatteryTileState.Asleep)
+            {
+                var zh = bottomBand * 0.85f;
+                DrawMark(g, "Zz", new RectangleF(4f, h - bottomBand + (bottomBand - zh) / 2f - h * 0.02f, zh * 1.5f, zh), DimText);
+            }
         }
         return ToFrame(bitmap);
     }
@@ -166,10 +185,6 @@ public static class BatteryRenderer
             case BatteryTileState.Online when visual.Charging:
                 DrawBolt(g, body);
                 break;
-            case BatteryTileState.Asleep:
-                DrawMark(g, "Zz", new RectangleF(body.Right - body.Height * 0.55f, body.Y - body.Height * 0.62f,
-                    body.Height * 0.9f, body.Height * 0.62f), DimText);
-                break;
             case BatteryTileState.NotFound:
             case BatteryTileState.NotConfigured:
                 DrawMark(g, "?", body, Color.White);
@@ -216,12 +231,14 @@ public static class BatteryRenderer
         g.FillPath(fill, path);
     }
 
-    private static void DrawText(Graphics g, WidgetTheme theme, string text, RectangleF box, Color color, bool bold)
+    /// <param name="minScale">O texto encolhe para caber até esta fração do tamanho cheio; passou disso, corta com "…".</param>
+    private static void DrawText(Graphics g, WidgetTheme theme, string text, RectangleF box, Color color, bool bold,
+        StringAlignment alignment = StringAlignment.Center, float minScale = 0f)
     {
         using var family = ResolveFamily(bold ? theme.SecondaryFontFamily : theme.PrimaryFontFamily);
         using var format = new StringFormat
         {
-            Alignment = StringAlignment.Center,
+            Alignment = alignment,
             LineAlignment = StringAlignment.Center,
             Trimming = StringTrimming.EllipsisCharacter,
             FormatFlags = StringFormatFlags.NoWrap,
@@ -232,7 +249,7 @@ public static class BatteryRenderer
         {
             var measured = g.MeasureString(text, probe).Width;
             if (measured > box.Width && measured > 0)
-                emSize = Math.Max(8f, emSize * box.Width / measured);
+                emSize = Math.Max(Math.Max(8f, emSize * minScale), emSize * box.Width / measured);
         }
         using var font = new Font(family, emSize, style, GraphicsUnit.Pixel);
         using var brush = new SolidBrush(color);
@@ -242,11 +259,18 @@ public static class BatteryRenderer
     /// <summary>Lado do selo: 28% do lado menor do tile (no Small, ~40 px; no Mini, ~19 px).</summary>
     internal static float BadgeSide(PixelSize size) => Math.Max(14f, Math.Min(size.Width, size.Height) * 0.28f);
 
-    private static void DrawBadge(Graphics g, PixelSize size, SourceBadge badge)
+    /// <summary>Onde o selo fica: canto superior direito.</summary>
+    internal static RectangleF BadgeRect(PixelSize size)
     {
         var side = BadgeSide(size);
         var margin = Math.Max(2f, side * 0.08f);
-        var rect = new RectangleF(size.Width - side - margin, margin, side, side);
+        return new RectangleF(size.Width - side - margin, margin, side, side);
+    }
+
+    private static void DrawBadge(Graphics g, PixelSize size, SourceBadge badge)
+    {
+        var rect = BadgeRect(size);
+        var side = rect.Width;
         if (badge.Image is { } image)
         {
             lock (image)

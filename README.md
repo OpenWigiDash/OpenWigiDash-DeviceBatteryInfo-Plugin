@@ -10,8 +10,9 @@ mouse, teclado e headset sem fio num tile, como o "G Hub Device" do Stream Deck,
 | --- | --- |
 | G HUB Battery | Bateria de um aparelho Logitech (mouse, teclado, headset) lida do G HUB |
 | Bluetooth Battery | Bateria de um aparelho Bluetooth pareado (fone, mouse, teclado, celular), a que o Windows mostra em Configurações > Bluetooth |
+| Xbox Battery | Bateria de um controle Xbox no adaptador sem fio ou no cabo |
 
-Cada fonte de bateria tem o seu widget, com o mesmo desenho de tile. Próximo: controle Xbox no adaptador ou no cabo. Ver [docs/PLANO.md](docs/PLANO.md).
+Cada fonte de bateria tem o seu widget, com o mesmo desenho de tile. Ver [docs/PLANO.md](docs/PLANO.md).
 
 Tamanhos: Mini (meia célula) e Small (o 1x1 da grade antiga).
 
@@ -19,8 +20,8 @@ Tamanhos: Mini (meia célula) e Small (o 1x1 da grade antiga).
 
 O tile mostra o nome do aparelho em cima, a pilha com 5 barras e o percentual embaixo.
 
-- **Dourado**: normal. **Vermelho**: no nível de alerta ou abaixo (20% por padrão). **Verde com raio**: carregando.
-- **Cinza com "Zz"**: o aparelho está dormindo ou fora de alcance. O percentual é a última leitura.
+- **Verde**: 85% ou mais. **Dourado**: no meio. **Vermelho**: no nível de alerta ou abaixo (20% por padrão). **Raio**: carregando (a cor continua a do nível).
+- **Cinza com "Zz"** (no canto de baixo, à esquerda): o aparelho está dormindo ou fora de alcance. O percentual é a última leitura.
 - **"?" Não encontrado**: o aparelho escolhido não está no G HUB agora.
 - **"!" G HUB fechado**: o G HUB não está aberto. O tile volta sozinho quando ele abrir.
 - Toque no tile pede as leituras de novo na hora.
@@ -49,6 +50,18 @@ cada aparelho pareado (`DEVPKEY_Bluetooth_Battery`), a mesma de Configurações 
 - O Windows não diz se o aparelho está carregando, então o tile não mostra o raio.
 - A lista é lida de novo a cada 30 s, quando a tela acorda e ao tocar no tile. Log em
   `%LOCALAPPDATA%\OpenWigiDash\WidgetData\DeviceBatteryInfo\bluetooth.log`.
+
+## Xbox Battery
+
+Mesmo tile, com o selo de controle no canto. Lê o relatório de bateria do Windows.Gaming.Input, a mesma API que os
+jogos usam, chamada direto (sem levar a biblioteca de WinRT do .NET para dentro do plugin).
+
+- O controle fica gravado pelo id fixo que o Windows dá a ele, nunca pela posição 1 a 4 do XInput, que muda
+  conforme a ordem em que os controles ligam.
+- Controle desligado continua no tile em cinza, com "Zz" e a última leitura.
+- Carregando (bateria recarregável no cabo) aparece com o raio verde.
+- Pareado por Bluetooth, o controle aparece no Bluetooth Battery.
+- Log em `%LOCALAPPDATA%\OpenWigiDash\WidgetData\DeviceBatteryInfo\xbox.log`.
 
 ## Requisitos
 
