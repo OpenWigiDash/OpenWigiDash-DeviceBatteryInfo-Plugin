@@ -111,7 +111,9 @@ public static class BatteryRenderer
                     ? new RectangleF(3f, h * 0.03f, w - 6f, titleBand)
                     : new RectangleF(5f, h * 0.03f, BadgeRect(size).X - 8f, titleBand);
                 DrawText(g, theme, visual.Title!, box, Color.White, bold: false,
-                    visual.Badge is null ? StringAlignment.Center : StringAlignment.Near);
+                    visual.Badge is null ? StringAlignment.Center : StringAlignment.Near,
+                    // Título com o mesmo tamanho em todos os tiles: nome comprido corta com "…" em vez de ficar miúdo.
+                    minScale: 0.9f);
             }
 
             var accent = AccentFor(visual);
@@ -229,8 +231,9 @@ public static class BatteryRenderer
         g.FillPath(fill, path);
     }
 
+    /// <param name="minScale">O texto encolhe para caber até esta fração do tamanho cheio; passou disso, corta com "…".</param>
     private static void DrawText(Graphics g, WidgetTheme theme, string text, RectangleF box, Color color, bool bold,
-        StringAlignment alignment = StringAlignment.Center)
+        StringAlignment alignment = StringAlignment.Center, float minScale = 0f)
     {
         using var family = ResolveFamily(bold ? theme.SecondaryFontFamily : theme.PrimaryFontFamily);
         using var format = new StringFormat
@@ -246,7 +249,7 @@ public static class BatteryRenderer
         {
             var measured = g.MeasureString(text, probe).Width;
             if (measured > box.Width && measured > 0)
-                emSize = Math.Max(8f, emSize * box.Width / measured);
+                emSize = Math.Max(Math.Max(8f, emSize * minScale), emSize * box.Width / measured);
         }
         using var font = new Font(family, emSize, style, GraphicsUnit.Pixel);
         using var brush = new SolidBrush(color);
