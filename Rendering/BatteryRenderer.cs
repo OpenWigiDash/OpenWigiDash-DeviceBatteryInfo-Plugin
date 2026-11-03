@@ -115,7 +115,16 @@ public static class BatteryRenderer
                 bottomColor, bold: !small);
 
             if (visual.Badge is { } badge)
+            {
                 DrawBadge(g, size, badge);
+                // Com selo, o "Zz" fica logo abaixo dele, no canto, longe do título e do selo.
+                if (visual.State == BatteryTileState.Asleep)
+                {
+                    var rect = BadgeRect(size);
+                    DrawMark(g, "Zz", new RectangleF(rect.X - rect.Width * 0.1f, rect.Bottom + rect.Height * 0.04f,
+                        rect.Width * 1.2f, rect.Height * 0.62f), DimText);
+                }
+            }
         }
         return ToFrame(bitmap);
     }
@@ -166,7 +175,7 @@ public static class BatteryRenderer
             case BatteryTileState.Online when visual.Charging:
                 DrawBolt(g, body);
                 break;
-            case BatteryTileState.Asleep:
+            case BatteryTileState.Asleep when visual.Badge is null:
                 DrawMark(g, "Zz", new RectangleF(body.Right - body.Height * 0.55f, body.Y - body.Height * 0.62f,
                     body.Height * 0.9f, body.Height * 0.62f), DimText);
                 break;
@@ -242,11 +251,18 @@ public static class BatteryRenderer
     /// <summary>Lado do selo: 28% do lado menor do tile (no Small, ~40 px; no Mini, ~19 px).</summary>
     internal static float BadgeSide(PixelSize size) => Math.Max(14f, Math.Min(size.Width, size.Height) * 0.28f);
 
-    private static void DrawBadge(Graphics g, PixelSize size, SourceBadge badge)
+    /// <summary>Onde o selo fica: canto superior direito.</summary>
+    internal static RectangleF BadgeRect(PixelSize size)
     {
         var side = BadgeSide(size);
         var margin = Math.Max(2f, side * 0.08f);
-        var rect = new RectangleF(size.Width - side - margin, margin, side, side);
+        return new RectangleF(size.Width - side - margin, margin, side, side);
+    }
+
+    private static void DrawBadge(Graphics g, PixelSize size, SourceBadge badge)
+    {
+        var rect = BadgeRect(size);
+        var side = rect.Width;
         if (badge.Image is { } image)
         {
             lock (image)
